@@ -1,0 +1,92 @@
+name: contentguard
+version: "1.0.0"
+description: >
+  ContentGuard is an OpenEnv environment for AI content moderation.
+  An agent reads social media posts and must classify them into categories:
+  safe, spam, hate_speech, harassment, or misinformation.
+  Tasks range from easy binary classification to hard context-aware
+  moderation with justifications required.
+
+author: ContentGuard Team
+tags:
+  - openenv
+  - content-moderation
+  - nlp
+  - classification
+  - real-world
+  - trust-and-safety
+
+domain: Trust & Safety / Content Moderation
+real_world_task: true
+
+tasks:
+  - id: 1
+    name: Basic Violation Detection
+    difficulty: easy
+    description: Classify 10 posts as safe or spam
+    max_steps: 10
+    score_range: [0.0, 1.0]
+
+  - id: 2
+    name: Multi-Category Classification
+    difficulty: medium
+    description: Classify 25 posts into 5 categories with severity ratings
+    max_steps: 25
+    score_range: [0.0, 1.0]
+
+  - id: 3
+    name: Context-Aware Moderation with Justification
+    difficulty: hard
+    description: Classify 40 posts including edge cases, with justifications required
+    max_steps: 40
+    score_range: [0.0, 1.0]
+
+observation_space:
+  type: object
+  fields:
+    post_id: string
+    post_text: string
+    step_number: integer
+    total_steps: integer
+    task_id: integer
+    task_description: string
+    action_schema: object
+    progress: float
+
+action_space:
+  type: object
+  fields:
+    category:
+      type: string
+      enum: [safe, spam, hate_speech, harassment, misinformation]
+      required: true
+    severity:
+      type: string
+      enum: [low, medium, high, none]
+      required: false
+    justification:
+      type: string
+      required: false
+
+reward:
+  type: float
+  range: [0.0, 1.0]
+  description: >
+    Reward is given at episode end (final step).
+    Partial rewards are computed per-post based on classification accuracy.
+    Penalties applied for false positives (flagging safe content).
+    Task 3 also rewards justification quality.
+
+api:
+  reset: POST /reset
+  step: POST /step
+  state: GET /state
+  tasks: GET /tasks
+  grader: GET /grader
+  baseline: POST /baseline
+  health: GET /health
+
+deployment:
+  platform: huggingface-spaces
+  runtime: docker
+  port: 7860
